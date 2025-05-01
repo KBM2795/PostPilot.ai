@@ -15,7 +15,7 @@ export function Navbar() {
     pathname.includes("/dashboard") || pathname.includes("/profile") || pathname.includes("/onboarding")
 
   return (
-    <header className="w-full py-4 px-6 md:px-10 bg-background/80 backdrop-blur-md fixed top-0 z-100 shadow-sm">
+    <header className="w-full py-4 px-6 md:px-10 bg-background/80 backdrop-blur-md fixed top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center">
           <span className="text-2xl font-bold gradient-text">PostPilot.ai</span>

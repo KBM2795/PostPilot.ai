@@ -1,3 +1,4 @@
+
 import dbConnect from "@/lib/dbConnect";
 import { UserModel } from "@/models/User";
 import { PostModel } from "@/models/Post";
@@ -5,7 +6,9 @@ import { auth ,clerkClient} from '@clerk/nextjs/server'
 import { currentUser } from '@clerk/nextjs/server'
 
 
-export async function GET() {
+
+
+export async function POST(request: Request) {
     try {
         await dbConnect();
 
@@ -43,13 +46,30 @@ export async function GET() {
                 message: "User is not there in DataBase",
             }, { status: 400 });
         }
+        
+        const { searchParams } = new URL(request.url);
+        const ID = searchParams.get('ID');
 
-        const posts = await PostModel.find({ userId: User._id }).sort({ createdAt: -1 });
+        
+        if (!ID) {
+            return Response.json({
+                success: false,
+                message: "Post ID is required",
+            }, { status: 400 });
+        }
+        
+        const post = await PostModel.findOneAndDelete({ _id: ID });
+
+        if (!post) {
+            return Response.json({
+                success: false,
+                message: "Post not found",
+            }, { status: 404 });
+        }
             
             return Response.json({
                 success: true,
-                message: "posts fetched successfully",
-                data: posts,
+                message: "posts Deleted successfully",
             }, { status: 201 });
 
 
@@ -57,11 +77,10 @@ export async function GET() {
         console.error("Error saving user information:", error);
         return Response.json({
             success: false,
-            message: "An unexpected error occurred while fetching your posts",
+            message: "An unexpected error occurred while Deleting your post",
             error: error instanceof Error ? error.message : "Unknown error"
         }, { status: 500 });
     }
 }
-
 
 

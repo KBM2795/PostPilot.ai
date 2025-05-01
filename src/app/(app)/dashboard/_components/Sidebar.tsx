@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Menu, Plus, MessageSquare, ChevronFirst, ChevronLast } from "lucide-react"
+import { Menu, Plus, MessageSquare, ChevronFirst, ChevronLast, AppWindow, FileX2 } from "lucide-react"
+import axios from "axios"
 
 interface SidebarProps {
   posts: Array<{
@@ -19,9 +20,26 @@ interface SidebarProps {
   initialPostId?: string
 }
 
-export function Sidebar({ posts, isLoading, initialPostId }: SidebarProps) {
+export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
   const router = useRouter()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  const  handleDelete = async (ID: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this post?")
+    if (confirmDelete) {
+      try {
+        const response = await axios.post(`/api/deletePost?ID=${ID}`)
+
+        if (response.data.success) {
+          window.location.reload()
+        } else {
+          console.error("Error deleting post:", response.data.message)
+        }
+      } catch (error) {
+        console.log("Error deleting post:", error);
+      }
+    }
+  }
 
   const handleNewPost = () => {
     router.push('/dashboard')
@@ -35,20 +53,22 @@ export function Sidebar({ posts, isLoading, initialPostId }: SidebarProps) {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
+  
+
   return (
-    <>
+    <div className="z-100 absolute">
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-15 left-4 z-50 lg:hidden"
+        className="fixed bottom-15 w-10  left-4 z-50 lg:hidden"
         onClick={toggleSidebar}
       >
-        <Menu className="h-4 w-4" />
+        <Menu className="h-10 w-10" />
       </Button>
 
       <div 
         className={`
-          ${isSidebarOpen ? 'w-80' : 'w-20 lg:w-0'} 
+          ${isSidebarOpen ? 'w-80' : 'w-0 lg:w-20'} 
           transform transition-all duration-200 ease-in-out
           border-r border-border flex flex-col fixed lg:relative z-40 
           bg-background h-screen shadow-lg pt-16
@@ -58,12 +78,12 @@ export function Sidebar({ posts, isLoading, initialPostId }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="absolute right-2 top-15 hidden lg:flex"
+          className="absolute right-5 top-10 hidden lg:flex"
         >
           {isSidebarOpen ? (
-            <ChevronFirst className="h-4 w-4" />
+            <AppWindow size={48} color="#d68800" strokeWidth={1.75} />
           ) : (
-            <ChevronLast className="h-4 w-4" />
+            <AppWindow  size={48} className="h-4 w-4" />
           )}
         </Button>
 
@@ -100,16 +120,22 @@ export function Sidebar({ posts, isLoading, initialPostId }: SidebarProps) {
                   }`}
                   onClick={() => handlePostSelect(post._id)}
                 >
-                  <div className={`truncate gap-1 w-full items-center ${!isSidebarOpen && 'flex justify-center'}`}>
+                  <div className={`truncate gap-3 w-full items-center ${!isSidebarOpen && 'flex justify-center'}`}>
                     {isSidebarOpen ? (
                       <>
-                        <span className="text-lg">
+                        <span className="text-lg w-fit ">
                           <MessageSquare className="inline-block mr-2"/> 
                           {post.prompt.topic.length > 20 
                             ? `${post.prompt.topic.slice(0, 20)}...` 
                             : post.prompt.topic}
+                          <button 
+                            className="float-right right-1 w-6 h-6 top-3 relative"
+                            onClick={()=>handleDelete(post._id)}
+                          >
+                            <FileX2 size={32} color="#ff0000" strokeWidth={2.5} />
+                          </button>
                         </span>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs mt-1 text-muted-foreground">
                           {new Date(post.createdAt).toDateString()}
                         </div>
                       </>
@@ -122,10 +148,8 @@ export function Sidebar({ posts, isLoading, initialPostId }: SidebarProps) {
             )}
           </div>
         </ScrollArea>
-        <div className={`p-4 border-t text-xs text-center text-muted-foreground ${!isSidebarOpen && 'hidden'}`}>
-          Posts remaining: 5/5
-        </div>
+        
       </div>
-    </>
+    </div>
   )
 }

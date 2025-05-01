@@ -63,6 +63,7 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    setIsLoadingVersion(true)
     const fetchPosts = async () => {
       try {
         setIsLoading(true)
@@ -75,6 +76,7 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
         toast.error('Failed to fetch posts')
       } finally {
         setIsLoading(false)
+        setIsLoadingVersion(false)
       }
     }
 
@@ -120,6 +122,7 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
       if (response.data.success) {
         const postId = response.data.data
         toast.success('Post created successfully! redirecting...')
+        window.location.reload()
         router.push(`/dashboard/${postId}`)
       } else {
         toast.error('Failed to create post:', response.data.message)
@@ -165,27 +168,34 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
     }
   }
 
-  const handleEditSubmit = () => {
+  const handleEditSubmit = async () => {
     if (!editConfig.prompt.trim()) return
     setIsGenerating(true)
     setIsEditing(false)
-
-    setTimeout(() => {
-      const newVersion = `${generatedPost} (Edited: ${editConfig.type})`
-      const updatedVersions = [...versions, newVersion]
-      setVersions(updatedVersions)
-      setGeneratedPost(newVersion)
-      setCurrentVersionIndex(updatedVersions.length - 1)
-      setIsGenerating(false)
-
-      if (initialPostId) {
-        setPosts(prevPosts => prevPosts.map(post => 
-          post._id === initialPostId 
-            ? { ...post, postVersions: [...post.postVersions, { version: updatedVersions.length, content: { text: newVersion } }] }
-            : post
-        ))
+    setIsLoadingVersion(true)
+     
+    try {
+      const response = await axios.post('/api/editPost', {
+        postId: initialPostId,
+        postText: generatedPost,
+        editConfig: {
+          type: editConfig.type,
+          prompt: editConfig.prompt,
+        },
+      })
+      if (response.data.success) {
+        const postId = response.data.data
+        toast.success('Post edited successfully!')
+        window.location.reload()
+        router.push(`/dashboard/${postId}`)
+      } else {
+        toast.error('Failed to edit post:', response.data.message)
       }
-    }, 1500)
+    } catch (error) {
+      toast.error('Error editing post:'+error)
+    }finally{
+      setIsLoadingVersion(false)
+    }
   }
 
   const handleShare = () => {
@@ -390,11 +400,16 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
                           onChange={(e) => setEditConfig(prev => ({ ...prev, prompt: e.target.value }))}
                         />
                       </div>
+                        {versions.length == 3 ? (
+                        <div className="text-red-500 text-sm mt-2">
+                          Edit limit reached. Please create a new post to make more changes.
+                        </div>
+                        ) : ""}
                       <div className="flex justify-end space-x-2">
                         <Button variant="outline" onClick={() => setIsEditing(false)}>
                           Cancel
                         </Button>
-                        <Button onClick={handleEditSubmit} disabled={!editConfig.prompt.trim()}>
+                        <Button onClick={handleEditSubmit} disabled={!editConfig.prompt.trim() || versions.length == 3}>
                           Generate New Version
                         </Button>
                       </div>
