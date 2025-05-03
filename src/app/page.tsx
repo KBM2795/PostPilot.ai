@@ -17,76 +17,88 @@ export default function Home() {
   const ctaRef = useRef(null)
 
   useEffect(() => {
-    // Register ScrollTrigger plugin
-    gsap.registerPlugin(ScrollTrigger)
+    // Make sure GSAP and ScrollTrigger are available on the client side
+    if (typeof window !== "undefined") {
+      // Register ScrollTrigger plugin first
+      gsap.registerPlugin(ScrollTrigger)
+      
+      // Kill any existing ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill())
 
-    // Hero animation
-    const heroTl = gsap.timeline()
-    heroTl.from(".hero-heading", { opacity: 0, y: 50, duration: 0.8 })
-    heroTl.from(".hero-description", { opacity: 0, y: 30, duration: 0.6 }, "-=0.4")
-    heroTl.from(".hero-buttons", { opacity: 0, y: 30, duration: 0.6 }, "-=0.4")
-    heroTl.from(".hero-card", { opacity: 0, y: 30, scale: 0.95, duration: 0.8 }, "-=0.4")
+      // Create a GSAP context for proper cleanup
+      const ctx = gsap.context(() => {
+        // Hero animation
+        const heroTl = gsap.timeline()
+        heroTl.from(".hero-heading", { opacity: 0, y: 50, duration: 0.8 })
+        heroTl.from(".hero-description", { opacity: 0, y: 30, duration: 0.6 }, "-=0.4")
+        heroTl.from(".hero-buttons", { opacity: 0, y: 30, duration: 0.6 }, "-=0.4")
+        heroTl.from(".hero-card", { opacity: 0, y: 30, scale: 0.95, duration: 0.8 }, "-=0.4")
 
-    // Features animation
-    gsap.from(".feature-heading", {
-      scrollTrigger: {
-        trigger: featuresRef.current,
-        start: "top 80%",
-      },
-      opacity: 0,
-      y: 50,
-      duration: 0.8,
-    })
+        // Features animation
+        gsap.from(".feature-heading", {
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 80%",
+          },
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+        })
 
-    gsap.from(".feature-card", {
-      scrollTrigger: {
-        trigger: featuresRef.current,
-        start: "top 70%",
-      },
-      opacity: 0,
-      y: 30,
-      stagger: 0.2,
-      duration: 0.6,
-    })
+        gsap.from(".feature-card", {
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 70%",
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.2,
+          duration: 0.6,
+        })
 
-    // How it works animation
-    gsap.from(".works-heading", {
-      scrollTrigger: {
-        trigger: howItWorksRef.current,
-        start: "top 80%",
-      },
-      opacity: 0,
-      y: 50,
-      duration: 0.8,
-    })
+        // How it works animation
+        gsap.from(".works-heading", {
+          scrollTrigger: {
+            trigger: howItWorksRef.current,
+            start: "top 80%",
+          },
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+        })
 
-    gsap.from(".works-step", {
-      scrollTrigger: {
-        trigger: howItWorksRef.current,
-        start: "top 70%",
-      },
-      opacity: 0,
-      y: 30,
-      stagger: 0.2,
-      duration: 0.6,
-    })
+        gsap.from(".works-step", {
+          scrollTrigger: {
+            trigger: howItWorksRef.current,
+            start: "top 70%",
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.2,
+          duration: 0.6,
+        })
 
-    // CTA animation
-    gsap.from(".cta-section", {
-      scrollTrigger: {
-        trigger: ctaRef.current,
-        start: "top 80%",
-      },
-      opacity: 0,
-      y: 30,
-      duration: 0.8,
-    })
+        // CTA animation
+        gsap.from(".cta-section", {
+          scrollTrigger: {
+            trigger: ctaRef.current,
+            start: "top 80%",
+          },
+          opacity: 0,
+          y: 30,
+          duration: 0.8,
+        })
+      })
 
-    return () => {
-      // Clean up ScrollTrigger when component unmounts
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
+      // Cleanup function
+      return () => {
+        // Revert the GSAP context
+        ctx.revert()
+        // Kill all ScrollTrigger instances
+        ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+      }
     }
-  }, [])
+  }, []) // Empty dependency array means this runs once on mount
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -106,7 +118,7 @@ export default function Home() {
                   engagement and showcase your expertise.
                 </p>
                 <div className="hero-buttons mt-8 flex flex-col sm:flex-row gap-4">
-                  <Link href="/signup">
+                  <Link href="/dashboard">
                     <Button size="lg" className="w-full sm:w-auto">
                       Get Started <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -168,7 +180,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
+                {[
                 {
                   icon: <Sparkles className="h-10 w-10 text-primary " />,
                   title: "AI-Powered Content",
@@ -186,7 +198,7 @@ export default function Home() {
                 },
                 {
                   icon: <MessageSquare className="h-10 w-10 text-primary" />,
-                  title: "Multiple Platforms",
+                  title: "Multiple Platforms (Coming Soon)",
                   description: "Generate content for LinkedIn, Twitter, Facebook, and other social platforms.",
                 },
                 {
@@ -199,13 +211,13 @@ export default function Home() {
                   title: "AI-Generated Images",
                   description: "Our AI generates relevant images to accompany your posts for better engagement.",
                 },
-              ].map((feature, index) => (
+                ].map((feature, index) => (
                 <div key={index} className={`feature-card bg-card p-8 rounded-2xl shadow-md border`}>
                   <div className="mb-4">{feature.icon}</div>
                   <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
                 </div>
-              ))}
+                ))}
             </div>
           </div>
         </section>
@@ -267,7 +279,7 @@ export default function Home() {
                 Join thousands of professionals who are using PostPilot.ai to create engaging content that drives
                 results.
               </p>
-              <Link href="/signup">
+              <Link href="/sign-up">
                 <Button size="lg" variant="secondary">
                   Get Started for Free
                 </Button>

@@ -59,7 +59,16 @@ export async function POST(request: Request) {
             const client = await clerkClient()
 
             const user = await client.users.updateUser(userId, params)
+            // Check if LinkedIn URL is already in use
+            const existingLinkedIn = await UserInfoModel.findOne({ linkedinURL });
+            if (existingLinkedIn) {
+                return Response.json({
+                    success: false,
+                    message: "This LinkedIn URL is already associated with another profile",
+                }, { status: 409 });
+            }
 
+            
             // Create UserInfo document
             const userInfo = await UserInfoModel.create({
                 email,

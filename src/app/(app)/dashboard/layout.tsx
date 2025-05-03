@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 import { Toaster } from "sonner"
 import { redirect, usePathname } from "next/navigation"
 import { Sidebar } from "./_components/Sidebar"
 import axios from "axios"
+
 
 export default function DashboardLayout({
   children,
@@ -62,6 +62,7 @@ export default function DashboardLayout({
         />
         <main className="flex-1 overflow-y-auto pt-24 pb-10">
           {children}
+          
         </main>
         
       </div>

@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Menu, Plus, MessageSquare, ChevronFirst, ChevronLast, AppWindow, FileX2 } from "lucide-react"
 import axios from "axios"
+import favicon from "@/app/favicon.ico"
 
 interface SidebarProps {
   posts: Array<{
@@ -31,12 +32,16 @@ export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
         const response = await axios.post(`/api/deletePost?ID=${ID}`)
 
         if (response.data.success) {
+          if (initialPostId === ID) {
+            router.push('/dashboard')
+          }
+
           window.location.reload()
         } else {
           console.error("Error deleting post:", response.data.message)
         }
-      } catch (error) {
-        console.log("Error deleting post:", error);
+      } catch (error: any) {
+        console.log( error?.response?.data?.message);
       }
     }
   }
@@ -63,7 +68,7 @@ export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
         className="fixed bottom-15 w-10  left-4 z-50 lg:hidden"
         onClick={toggleSidebar}
       >
-        <Menu className="h-10 w-10" />
+        <AppWindow size={56} color="#d68800" strokeWidth={2.5} />
       </Button>
 
       <div 
@@ -81,14 +86,14 @@ export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
           className="absolute right-5 top-10 hidden lg:flex"
         >
           {isSidebarOpen ? (
-            <AppWindow size={48} color="#d68800" strokeWidth={1.75} />
+            <AppWindow size={56} color="#d68800" strokeWidth={2.5} />
           ) : (
-            <AppWindow  size={48} className="h-4 w-4" />
+            <AppWindow  size={56} className="h-4 w-4" />
           )}
         </Button>
 
         <div className={`p-4 flex flex-col items-center justify-between border-b ${!isSidebarOpen && 'items-center'}`}>
-          <h2 className={`font-bold text-2xl mb-4 ${!isSidebarOpen && 'hidden'}`}>Your Posts</h2>
+          <h2 className={` flex gap-3 font-bold text-3xl mb-4 ${!isSidebarOpen && 'hidden'}`}><img src={favicon.src} alt="" className="w-10 left-2" /> Your Posts</h2>
           <div className={`w-full border-b-3 border-gray-500 ${!isSidebarOpen && 'hidden'}`}></div>
           <Button 
             onClick={handleNewPost} 
@@ -97,7 +102,7 @@ export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
             className="w-full mt-4 bg-blue-500"
           >
             <Plus className={isSidebarOpen ? "h-6 w-full" : "h-4 w-4"} />
-            {isSidebarOpen && " New Post"}
+            {isSidebarOpen && "New Post"}
           </Button>
         </div>
 
@@ -112,38 +117,44 @@ export function Sidebar({ posts, isLoading, initialPostId  }: SidebarProps) {
               ))
             ) : (
               posts.map((post) => (
-                <Button
-                  key={post._id}
-                  variant="ghost"
-                  className={`w-full h-fit justify-start text-left px-2 py-2 hover:bg-orange-100 ${
-                    initialPostId === post._id ? 'bg-orange-300' : ''
-                  }`}
-                  onClick={() => handlePostSelect(post._id)}
-                >
-                  <div className={`truncate gap-3 w-full items-center ${!isSidebarOpen && 'flex justify-center'}`}>
-                    {isSidebarOpen ? (
-                      <>
-                        <span className="text-lg w-fit ">
-                          <MessageSquare className="inline-block mr-2"/> 
-                          {post.prompt.topic.length > 20 
-                            ? `${post.prompt.topic.slice(0, 20)}...` 
-                            : post.prompt.topic}
-                          <button 
-                            className="float-right right-1 w-6 h-6 top-3 relative"
-                            onClick={()=>handleDelete(post._id)}
-                          >
-                            <FileX2 size={32} color="#ff0000" strokeWidth={2.5} />
-                          </button>
-                        </span>
-                        <div className="text-xs mt-1 text-muted-foreground">
-                          {new Date(post.createdAt).toDateString()}
-                        </div>
-                      </>
-                    ) : (
-                      <MessageSquare className="h-4 w-4" />
-                    )}
-                  </div>
-                </Button>
+                <div key={post._id} className="relative group">
+                  <Button
+                    
+                    className={`w-full h-fit justify-start text-left px-2 py-2 bg-white text-black hover:bg-orange-100 ${
+                      initialPostId === post._id ? 'bg-orange-300' : ''
+                    }`}
+                    onClick={() => handlePostSelect(post._id)}
+                  >
+                    <div className={`truncate gap-3 w-full items-center  ${!isSidebarOpen ? 'flex justify-center ml-0' : 'ml-3'} `}>
+                      {isSidebarOpen ? (
+                        <>
+                          <span className="text-lg w-fit pr-8">
+                            <MessageSquare className="inline-block mr-2"/> 
+                            {post.prompt.topic.length > 20 
+                              ? `${post.prompt.topic.slice(0, 20)}...` 
+                              : post.prompt.topic}
+                          </span>
+                          <div className="text-xs mt-1 text-muted-foreground">
+                            {new Date(post.createdAt).toDateString()}
+                          </div>
+                        </>
+                      ) : (
+                        <MessageSquare className="h-4 w-4" />
+                      )}
+                    </div>
+                  </Button>
+                  {isSidebarOpen && (
+                    <div 
+                      className="absolute right-4 top-1/2 -translate-y-1/2 hidden group-hover:block "
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(post._id);
+                      }}
+                    >
+                      <FileX2 size={24} color="#ff0000" strokeWidth={2.5} />
+                    </div>
+                  )}
+                </div>
               ))
             )}
           </div>

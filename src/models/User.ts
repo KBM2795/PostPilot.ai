@@ -6,6 +6,10 @@ export interface User extends Document {
     username : string;
     userInfo?: UserInfo;
     credits: number;
+    lastCreditReset?: Date;
+    linkedToken?: string;
+    linkedTokenId?: string;
+    linkedTokenExpDate?: Date;
     subscriptionPlan: "Free" | "Premium";
 }
 
@@ -23,6 +27,14 @@ const userSchema = new Schema<User>({
     },
     userInfo: { type: Schema.Types.ObjectId, ref: "UserInfo" },
     credits: { type: Number, default: 5 },
+    lastCreditReset: { type: Date },
+    linkedToken: { 
+        type: String
+    },
+    linkedTokenId: { 
+        type: String
+    },
+    linkedTokenExpDate: { type: Date },
     subscriptionPlan: { type: String, enum: ["Free", "Premium"], default: "Free" }
 }, { timestamps: true });
 

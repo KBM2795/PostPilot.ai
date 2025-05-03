@@ -100,21 +100,6 @@ export async function POST(req : Request) {
                     { new: true }
                 );
 
-                // Update user credits
-                const userCredits = userDB.credits - 1;
-                const updatedUser = await UserModel.findOneAndUpdate(
-                    { email: email },
-                    { $set: { credits: userCredits } },
-                    { new: true }
-                );
-
-                if (!updatedUser) {
-                    return Response.json({
-                        success: false,
-                        message: "Failed to update user credits",
-                    }, { status: 400 });
-                }
-
                 return Response.json({
                     success: true,
                     message: "Post updated successfully",

@@ -13,10 +13,17 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Check, Edit2, Save } from "lucide-react"
+import { BadgeCheck, BadgeX, Check, Edit2, Save } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ApiResponse } from "@/types/ApiResponse"
+
+
+
+const LINKEDIN_CLIENT_ID = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID!;
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI!;
+
+
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false)
@@ -32,6 +39,11 @@ export default function Profile() {
     bio: "",
     tone: "friendly",
   })
+  const [isLinkedInVerified, setIsLinkedInVerified] = useState(false)
+  
+  const state = "xyz123"
+
+  const loginUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid%20profile%20email%20w_member_social&state=${state}`;;
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -51,6 +63,7 @@ export default function Profile() {
             tone: response.data.data.userInfo.tone,
           });
           setCredit(response.data.data.user.credits)
+            setIsLinkedInVerified(response.data.data.user.linkedTokenExpDate !== null && response.data.data.user.linkedToken !== "" && new Date(response.data.data.user.linkedTokenExpDate) > new Date() && response.data.data.user.linkedTokenId )
         }
       } catch (error) {
         toast.error('Error fetching user data')
@@ -244,14 +257,38 @@ export default function Profile() {
                           value={userData.linkedinURL}
                           onChange={handleChange} /></>
                       ) : (
+                        <>
                         <a 
                           href={userData.linkedinURL}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline block truncate"
-                        >
+                          >
                           {userData.linkedinURL}
                         </a>
+                        <div className="mt-1">
+                          
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {isLinkedInVerified ? (<>
+                            <span className="text-green-600 flex items-center gap-1"><BadgeCheck color="#00ff2a" />verified</span>
+                           </>
+                          ) : (<>
+                            <Button
+                            size="sm"
+                            className="text-xs bg-orange-400 text-white hover:bg-orange-200"
+                            disabled={isLinkedInVerified}
+                            >
+                            <a href={loginUrl} className="text-sm font-med  block truncate" target="_blank" rel="noopener noreferrer"
+                            >
+                            Verify LinkedIn Account
+                          </a>
+                          </Button>
+                            
+                            </>
+                          )}
+                        </p>
+                            </>
                       )}
                     </div>
 

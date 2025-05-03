@@ -3,9 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { LogOut, Menu, X } from "lucide-react"
+import { LogOut, Menu, UserRoundPen, X } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { SignOutButton } from "@clerk/nextjs"
+import { Color } from "three/src/Three.Core.js"
+import favicon from "@/app/favicon.ico"
+
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -17,7 +20,8 @@ export function Navbar() {
   return (
     <header className="w-full py-4 px-6 md:px-10 bg-background/80 backdrop-blur-md fixed top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex flex-col items-start">
+          <img src={favicon.src} alt="" className="w-6 left-2" />
           <span className="text-2xl font-bold gradient-text">PostPilot.ai</span>
         </Link>
 
@@ -46,14 +50,13 @@ export function Navbar() {
               </Link>
               <Link
                 href="/profile"
-                className={`text-sm font-medium ${pathname.includes("/profile") ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                className={`text-sm font-medium ${pathname.includes("/profile") ? "text-orange-500" : "text-orange-500 hover:text-primary"}`}
               >
-                Profile
+                <UserRoundPen className={`w-6 h-6 mr-2 ${pathname.includes("/profile") ? "text-orange-500 hover:text-blue-500" : "text-blue-500 hover:text-orange-500"} transition-colors`} />
               </Link>
-              
                 <div className="flex items-center gap-2">
                 <SignOutButton>
-                  <Button variant="ghost" className="text-sm font-medium hover:bg-orange-300">
+                  <Button  className="text-sm font-medium bg-orange-400 hover:bg-orange-200">
                   <LogOut className="w-4 h-4 mr-2" /> Sign Out
                   </Button>
                 </SignOutButton>
@@ -115,6 +118,13 @@ export function Navbar() {
                 >
                   Profile
                 </Link>
+                <div className="flex items-center gap-2">
+                <SignOutButton>
+                  <Button variant="ghost" className="text-sm font-medium w-full bg-orange-400 hover:bg-orange-200">
+                  <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                  </Button>
+                </SignOutButton>
+                </div>
               </>
             ) : (
               <>

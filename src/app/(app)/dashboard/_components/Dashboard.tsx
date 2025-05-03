@@ -61,6 +61,8 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
     referenceUrl: "",
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [showVersionSelect, setShowVersionSelect] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
 
   useEffect(() => {
     setIsLoadingVersion(true)
@@ -125,10 +127,10 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
         window.location.reload()
         router.push(`/dashboard/${postId}`)
       } else {
-        toast.error('Failed to create post:', response.data.message)
+        toast.error(response.data.message || 'Failed to create post')
       }
-    } catch (error) {
-      toast.error('Error creating post:'+error)
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error creating post')
     } finally {
       setIsGenerating(false)
     }
@@ -191,28 +193,57 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
       } else {
         toast.error('Failed to edit post:', response.data.message)
       }
-    } catch (error) {
-      toast.error('Error editing post:'+error)
+    } catch (error: any) {
+      console.log( error?.response?.data?.message);
     }finally{
       setIsLoadingVersion(false)
     }
   }
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    if (versions.length > 1 && !showVersionSelect) {
+      setShowVersionSelect(true)
+      return
+    }
+
     setIsPosting(true)
     setPostSuccess(false)
 
-    setTimeout(() => {
+    // Use selectedVersion if it's set, otherwise use currentVersionIndex
+    const versionToPost = selectedVersion !== null ? selectedVersion : currentVersionIndex
+    console.log(versionToPost);
+    
+    
+    try {
+      const post = posts.find(p => p._id === initialPostId)
+      const version = post?.postVersions[versionToPost]
+      const response = await axios.post("/api/linkedin/accesCheck", {
+        postId: initialPostId,
+        version: version?.version,
+        content: version?.content,
+      })
+
+      if (response.data.success) {
+        toast.success('Post shared successfully!')
+        setPostSuccess(true)
+        router.push(response.data.data.linkedin_url)
+      } else {
+        toast.error(response.data.message)
+      }
+
+    } catch (error:any) {
+      toast.error(error.response?.data?.message || 'Error sharing post')
+    }finally{
       setIsPosting(false)
-      setPostSuccess(true)
-    }, 2000)
+    }
+    
   }
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden bg-background">
       <div className="container mx-auto p-6">
         {!initialPostId ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto items-center justify-center flex flex-col space-y-5">
             <Card className="bg-card">
               <CardHeader>
                 <CardTitle>Create Social Media Post</CardTitle>
@@ -264,16 +295,36 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
                 <Button variant="outline" onClick={handleReset}>
                   Reset
                 </Button>
-                <Button onClick={handleSubmit} disabled={isGenerating || !formData.topic || !formData.overview}>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={
+                  isGenerating || 
+                  !formData.topic || 
+                  !formData.overview || 
+                  posts.some(post => {
+                    const postDate = new Date(post.createdAt).toDateString();
+                    const today = new Date().toDateString();
+                    return postDate === today;
+                  })
+                  }
+                >
                   {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                  ) : posts.some(post => {
+                    const postDate = new Date(post.createdAt).toDateString();
+                    const today = new Date().toDateString();
+                    return postDate === today;
+                  }) ? (
+                  <>
+                    Daily Limit Reached
+                  </>
                   ) : (
-                    <>
-                      Generate Post
-                    </>
+                  <>
+                    Generate Post
+                  </>
                   )}
                 </Button>
               </CardFooter>
@@ -319,15 +370,62 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
                     </>
                   )}
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline" onClick={handleEdit} disabled={isEditing}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button onClick={handleShare} disabled={isPosting}>
-                    <Share className="h-4 w-4 mr-2" />
-                    {isPosting ? "Posting..." : "Share Post"}
-                  </Button>
+                <CardFooter className="flex-col space-y-4">
+                  <div className="flex justify-between w-full">
+                    <Button variant="outline" onClick={handleEdit} disabled={isEditing}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button onClick={handleShare} disabled={isPosting}>
+                      <Share className="h-4 w-4 mr-2" />
+                      {isPosting ? "Posting..." : "Share Post"}
+                    </Button>
+                  </div>
+                  
+                  {showVersionSelect && versions.length > 1 && (
+                    <div className="w-full px-4 py-5 bg-white flex flex-col gap-3 rounded-md shadow-[0px_0px_15px_rgba(0,0,0,0.09)]">
+                      <legend className="text-xl font-semibold mb-3 select-none">Select Version to Share</legend>
+                      {versions.map((version, index) => (
+                        <label 
+                          key={index}
+                          htmlFor={`version-${index}`}
+                          className="font-medium h-14 relative hover:bg-zinc-100 flex items-center px-3 gap-3 rounded-lg has-[:checked]:text-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:ring-blue-300 has-[:checked]:ring-1 select-none"
+                        >
+                          <div className="w-5 fill-blue-500">
+                            <MessageSquare className="h-5 w-5" />
+                          </div>
+                          Version {index + 1}
+                          <input
+                            type="radio"
+                            name="versionSelect"
+                            id={`version-${index}`}
+                            value={index.toString()}
+                            checked={selectedVersion === index}
+                            onChange={(e) => setSelectedVersion(index)}
+                            className="w-4 h-4 absolute accent-blue-500 right-3"
+                          />
+                        </label>
+                      ))}
+                      
+                      <div className="flex justify-end space-x-2 mt-4">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowVersionSelect(false)
+                            setSelectedVersion(null)
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleShare}
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                        >
+                          Confirm & Share
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardFooter>
               </Card>
 
