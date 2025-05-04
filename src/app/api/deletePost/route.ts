@@ -4,6 +4,7 @@ import { UserModel } from "@/models/User";
 import { PostModel } from "@/models/Post";
 import { auth ,clerkClient} from '@clerk/nextjs/server'
 import { currentUser } from '@clerk/nextjs/server'
+import { v2 as cloudinary } from 'cloudinary';
 
 
 
@@ -59,6 +60,19 @@ export async function POST(request: Request) {
         }
         
         const post = await PostModel.findOneAndDelete({ _id: ID });
+
+        if (post?.postVersions) {
+            for (const version of post.postVersions) {
+                if (version.content.image_id) {
+                    try {
+                        await cloudinary.uploader.destroy(version.content.image_id);
+                    } catch (cloudinaryError) {
+                        console.error("Error deleting image from Cloudinary:", cloudinaryError);
+                    }
+                }
+            }
+        }
+        
 
         if (!post) {
             return Response.json({
