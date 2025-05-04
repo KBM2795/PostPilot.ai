@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { MessageSquare, X } from 'lucide-react'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
+import { useSession, useUser } from '@clerk/nextjs'
 
 // Replace with your n8n webhook URL (fixed double slashes)
 const WEBHOOK_URL = 'https://n8n-xe5w.onrender.com//webhook//aa2afed7-4a98-405a-b7fe-1a57d2b1723b/chat'
@@ -28,6 +29,9 @@ export function FeedbackBot() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const { session } = useSession();
+  const { user } = useUser();
+
   const scrollToBottom = () => {
     const scrollArea = document.querySelector('.scroll-area-viewport')
     if (scrollArea) {
@@ -49,7 +53,7 @@ export function FeedbackBot() {
         },
         body: JSON.stringify({
           chatInput: message,
-          sessionId: Date.now().toString(),
+          sessionId: user?.id,
         }),
       })
 
