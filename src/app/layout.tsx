@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "next-themes"
 import { ClerkProvider} from '@clerk/nextjs'
+import { FeedbackBot } from "@/components/feedback-bot"
 
 
 const inter = Inter({ subsets: ["latin"] })
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
+          <FeedbackBot />
         </ThemeProvider>
       </body>
     </html>
