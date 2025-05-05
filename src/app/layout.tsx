@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "next-themes"
 import { ClerkProvider} from '@clerk/nextjs'
 import { FeedbackBot } from "@/components/feedback-bot"
+import { Analytics } from "@vercel/analytics/react"
 
 
 const inter = Inter({ subsets: ["latin"] })
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
           <FeedbackBot />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
