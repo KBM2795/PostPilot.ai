@@ -26,6 +26,9 @@ export default function DashboardLayout({
         if (response.data.success) {
           setPosts(response.data.data)
         }
+        if(response.status === 404){
+          redirect("/onboarding")
+        }
       } catch (error) {
         console.error('Error fetching posts:', error)
       } finally {
