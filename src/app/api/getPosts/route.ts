@@ -41,7 +41,7 @@ export async function GET() {
             return Response.json({
                 success: false,
                 message: "User is not there in DataBase",
-            }, { status: 400 });
+            }, { status: 404 });
         }
 
         const posts = await PostModel.find({ userId: User._id }).sort({ createdAt: -1 });
