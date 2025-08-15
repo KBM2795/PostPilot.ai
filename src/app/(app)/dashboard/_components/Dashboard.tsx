@@ -123,8 +123,7 @@ export function Dashboard({ initialPostId }: DashboardProps): React.ReactElement
       const response = await axios.post('/api/createPost', formData)
       if (response.data.success) {
         const postId = response.data.data
-        toast.success('Post created successfully! redirecting...')
-        window.location.reload()
+        toast.success('Post created successfully! Redirecting...')
         router.push(`/dashboard/${postId}`)
       } else {
         toast.error(response.data.message || 'Failed to create post')
